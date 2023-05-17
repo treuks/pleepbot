@@ -3,13 +3,15 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
+    "@typescript-eslint/parser": "^5.59.6",
     "bun-types": "^0.5.0",
+    "eslint": "^8.40.0",
     "prettier": "^2.8.8"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@kararty/dank-twitch-irc": "^6.0.0",
+    "@kararty/dank-twitch-irc": "^6.0.0"
   }
 }
