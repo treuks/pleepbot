@@ -46,7 +46,7 @@ const updatePointsForId = db.query(
 
 const userIsInDatabase = (username: string): boolean => {
 	let userData = getUidFromUsername.get({ $username: username })
-	if (userData === undefined) {
+	if (userData == undefined) {
 		return false
 	} else {
 		return true
@@ -55,7 +55,7 @@ const userIsInDatabase = (username: string): boolean => {
 
 const isRegistered = (uid: string): boolean => {
 	let userData = getUsernameFromId.get({ $uid: uid })
-	if (userData === undefined) {
+	if (userData == undefined) {
 		return false
 	} else {
 		return true
@@ -178,7 +178,7 @@ client.on("PRIVMSG", (msg) => {
 
 		if (messageArgs[0] === "points") {
 			if (messageArgs.length > 1 && messageArgs[1].startsWith("@")) {
-				let strippedUser = messageArgs[1].substring(1)
+				let strippedUser = messageArgs[1].trim().toLowerCase().substring(1)
 				if (userIsInDatabase(strippedUser) === false) {
 					client.privmsg(
 						CHANNEL_NAME,
@@ -186,15 +186,15 @@ client.on("PRIVMSG", (msg) => {
 					)
 					return
 				} else {
-					let { uid } = getUidFromUsername.get({
+					let uid = getUidFromUsername.get({
 						$username: strippedUser,
 					}) as Uid
-					let { points } = getUserPointsFromId.get({
-						$uid: uid,
+					let points = getUserPointsFromId.get({
+						$uid: uid.uid,
 					}) as Points
 					client.privmsg(
 						CHANNEL_NAME,
-						`${messageArgs[1]} has ${points} points.`
+						`${messageArgs[1]} has ${points.points} points.`
 					)
 					return
 				}
@@ -206,14 +206,14 @@ client.on("PRIVMSG", (msg) => {
 					)
 					return
 				}
-				let { points } = getUserPointsFromId.get({
+				let points = getUserPointsFromId.get({
 					$uid: msg.senderUserID,
 				}) as Points
 	
 				client.reply(
 					CHANNEL_NAME,
 					msg.messageID,
-					`You have ${points} GAMBA points!`
+					`You have ${points.points} GAMBA points!`
 				)
 			}
 
@@ -227,11 +227,11 @@ client.on("PRIVMSG", (msg) => {
 				)
 				return
 			}
-			let { points } = getUserPointsFromId.get({
+			let points = getUserPointsFromId.get({
 				$uid: msg.senderUserID,
 			}) as Points
 
-			if (points <= 0) {
+			if (points.points <= 0) {
 				client.reply(
 					CHANNEL_NAME,
 					msg.messageID,
@@ -241,7 +241,7 @@ client.on("PRIVMSG", (msg) => {
 			}
 
 			if (messageArgs[1] === "all") {
-				gamba(points, points, msg.senderUserID, msg.messageID)
+				gamba(points.points, points.points, msg.senderUserID, msg.messageID)
 				return
 			}
 
@@ -267,17 +267,17 @@ client.on("PRIVMSG", (msg) => {
 				return
 			}
 
-			if (points < Number(messageArgs[1])) {
+			if (points.points < Number(messageArgs[1])) {
 				client.reply(
 					CHANNEL_NAME,
 					msg.messageID,
-					`pleep Sorry, you only have ${points} points!`
+					`pleep Sorry, you only have ${points.points} points!`
 				)
 				return
 			}
 
 			gamba(
-				points,
+				points.points,
 				Number(messageArgs[1]),
 				msg.senderUserID,
 				msg.messageID
