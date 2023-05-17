@@ -7,7 +7,7 @@
     "target": "esnext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
+    //"allowImportingTsExtensions": true,
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
