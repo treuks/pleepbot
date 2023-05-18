@@ -6,13 +6,13 @@ const db = new Database("pleep.db", { create: true });
 
 const BOT_USERNAME = Bun.env.PLEEPY_BOTNAME;
 
-if (BOT_USERNAME === null) {
+if (typeof BOT_USERNAME === "undefined") {
 	throw "PLEEPY_BOTNAME environmental variable is empty.";
 }
 
 const OAUTH_TOKEN = Bun.env.PLEEPY_PASS;
 
-if (OAUTH_TOKEN === null) {
+if (typeof OAUTH_TOKEN === "undefined") {
 	throw "OAUTH_TOKEN environmental variable is empty.";
 }
 
@@ -21,10 +21,9 @@ const client = new ChatClient({
 	password: OAUTH_TOKEN,
 });
 
-// rome-ignore lint/style/noNonNullAssertion: If it is empty then the bot should die regardless.
-const CHANNEL_NAME = Bun.env.PLEEPY_CHANNEL!;
+const CHANNEL_NAME = Bun.env.PLEEPY_CHANNEL;
 
-if (CHANNEL_NAME === null) {
+if (typeof CHANNEL_NAME === "undefined") {
 	throw "PLEEPY_CHANNEL environmental variable is empty.";
 }
 
