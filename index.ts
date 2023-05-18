@@ -1,14 +1,13 @@
 import { ChatClient } from '@kararty/dank-twitch-irc';
 import { Database } from 'bun:sqlite';
+import Bun from 'bun';
 
 const db = new Database('pleep.db', { create: true });
 
 const client = new ChatClient({
   username: 'pleepybot',
-  // eslint-disable-next-line no-undef
   password: Bun.env.PLEEPY_PASS,
 });
-// eslint-disable-next-line no-undef
 const CHANNEL_NAME = Bun.env.PLEEPY_CHANNEL!;
 
 /**
