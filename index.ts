@@ -1,7 +1,15 @@
-import { ChannelIRCMessage, ChatClient } from "@kararty/dank-twitch-irc"
-import { Database } from "bun:sqlite"
+import { ChatClient } from '@kararty/dank-twitch-irc';
+import { Database } from 'bun:sqlite';
 
-const db = new Database("pleep.db", { create: true })
+const db = new Database('pleep.db', { create: true });
+
+const client = new ChatClient({
+  username: 'pleepybot',
+  // eslint-disable-next-line no-undef
+  password: Bun.env.PLEEPY_PASS,
+});
+// eslint-disable-next-line no-undef
+const CHANNEL_NAME = Bun.env.PLEEPY_CHANNEL!;
 
 /**
  * Get Username from the given Twitch ID.
@@ -11,8 +19,8 @@ const db = new Database("pleep.db", { create: true })
  * let username = getUsernameFromId.get({$uid: uid}) as UsernameObject
  */
 const getUsernameFromId = db.query(
-	"SELECT username FROM users WHERE uid = $uid;"
-)
+  'SELECT username FROM users WHERE uid = $uid;',
+);
 /**
  * Get Twitch UID from the Twitch Username.
  * @param {string} username - Required Twitch Username
@@ -21,8 +29,8 @@ const getUsernameFromId = db.query(
  * let uid = getUidFromUsername.get({$username: username}) as UidObject
  */
 const getUidFromUsername = db.query(
-	"SELECT uid FROM users WHERE username = $username;"
-)
+  'SELECT uid FROM users WHERE username = $username;',
+);
 /**
  * Get Points from the Twitch UID.
  * @param {string} uid - Required Twitch UID
@@ -31,8 +39,8 @@ const getUidFromUsername = db.query(
  * let points = getUserPointsFromId.get({$uid: uid}) as PointObject
  */
 const getUserPointsFromId = db.query(
-	"SELECT points FROM users WHERE uid = $uid;"
-)
+  'SELECT points FROM users WHERE uid = $uid;',
+);
 /**
  * Updates Points for given user.
  * @param {string} uid - Required Twitch UID
@@ -41,251 +49,233 @@ const getUserPointsFromId = db.query(
  * updatePointsForId.run({ $points: points, $uid: uid })
  */
 const updatePointsForId = db.query(
-	"UPDATE users SET points = $points WHERE uid = $uid;"
-)
+  'UPDATE users SET points = $points WHERE uid = $uid;',
+);
 
 const userIsInDatabase = (username: string): boolean => {
-	let userData = getUidFromUsername.get({ $username: username })
-	if (userData == undefined) {
-		return false
-	} else {
-		return true
-	}
-}
+  const userData = getUidFromUsername.get({ $username: username });
+  if (userData === null) {
+    return false;
+  }
+  return true;
+};
 
 const isRegistered = (uid: string): boolean => {
-	let userData = getUsernameFromId.get({ $uid: uid })
-	if (userData == undefined) {
-		return false
-	} else {
-		return true
-	}
-}
+  const userData = getUsernameFromId.get({ $uid: uid });
+  if (userData === null) {
+    return false;
+  }
+  return true;
+};
 
 type Points = {
-	points: number
-}
+  points: number;
+};
 
 type Uid = {
-	uid: number
-}
+  uid: number;
+};
 
-type Username = {
-	username: string
-}
+// type Username = {
+//   username: string;
+// };
 
 const gamba = (
-	currentAmount: number,
-	betAmount: number,
-	userId: string,
-	messageId: string
+  currentAmount: number,
+  betAmount: number,
+  userId: string,
+  messageId: string,
 ) => {
-	// Coin Flip
-	let coinflip = Math.round(Math.random())
-	let won = coinflip > 0
+  // Coin Flip
+  const coinflip = Math.round(Math.random());
+  const won = coinflip > 0;
 
-	if (betAmount === currentAmount) {
-		if (won === true) {
-			updatePointsForId.run({ $points: currentAmount * 2, $uid: userId })
-			client.reply(
-				CHANNEL_NAME,
-				messageId,
-				`pogs You almost lost everything, but you didn't! You now have ${
-					currentAmount * 2
-				} points!`
-			)
-		} else {
-			updatePointsForId.run({ $points: 0, $uid: userId })
-			client.reply(
-				CHANNEL_NAME,
-				messageId,
-				`SadgeCry You lost everything! ${currentAmount} points down the drain!`
-			)
-		}
-	}
+  if (betAmount === currentAmount) {
+    if (won === true) {
+      updatePointsForId.run({ $points: currentAmount * 2, $uid: userId });
+      client.reply(
+        CHANNEL_NAME,
+        messageId,
+        `pogs You almost lost everything, but you didn't! You now have ${
+          currentAmount * 2
+        } 🪙 pleeps!`,
+      );
+    } else {
+      updatePointsForId.run({ $points: 0, $uid: userId });
+      client.reply(
+        CHANNEL_NAME,
+        messageId,
+        `SadgeCry You lost everything! ${currentAmount} 🪙 pleeps down the drain!`,
+      );
+    }
+  }
 
-	if (won === true) {
-		updatePointsForId.run({
-			$points: currentAmount + betAmount * 2,
-			$uid: userId,
-		})
-		client.reply(
-			CHANNEL_NAME,
-			messageId,
-			`pleep You won! And now have ${
-				currentAmount + betAmount * 2
-			} points!`
-		)
-	} else {
-		updatePointsForId.run({
-			$points: currentAmount - betAmount,
-			$uid: userId,
-		})
-		client.reply(
-			CHANNEL_NAME,
-			messageId,
-			`GAMBA You lost ${betAmount} points! You now have ${
-				currentAmount - betAmount
-			}`
-		)
-	}
-}
+  if (won === true) {
+    updatePointsForId.run({
+      $points: currentAmount + betAmount * 2,
+      $uid: userId,
+    });
+    client.reply(
+      CHANNEL_NAME,
+      messageId,
+      `pleep You won! And now have ${currentAmount + betAmount * 2} 🪙 pleeps!`,
+    );
+  } else {
+    updatePointsForId.run({
+      $points: currentAmount - betAmount,
+      $uid: userId,
+    });
+    client.reply(
+      CHANNEL_NAME,
+      messageId,
+      `GAMBA You lost ${betAmount} 🪙 pleeps! You now have ${
+        currentAmount - betAmount
+      } 🪙 pleeps!`,
+    );
+  }
+};
 
-let client = new ChatClient({
-	username: "pleepybot",
-	password: Bun.env.PLEEPY_PASS,
-})
-const CHANNEL_NAME = Bun.env.PLEEPY_CHANNEL!
+client.on('ready', () => console.log('Successfully connected to chat'));
+client.on('close', (error) => {
+  db.close();
+  if (error != null) {
+    console.error('Client closed due to error', error);
+  }
+});
 
-client.on("ready", () => console.log("Successfully connected to chat"))
-client.on("close", (error) => {
-	db.close()
-	if (error != null) {
-		console.error("Client closed due to error", error)
-	}
-})
+client.on('PRIVMSG', (msg) => {
+  console.log(`[#${msg.channelName}] ${msg.displayName}: ${msg.messageText}`);
 
-client.on("PRIVMSG", (msg) => {
-	console.log(`[#${msg.channelName}] ${msg.displayName}: ${msg.messageText}`)
+  if (msg.messageText.startsWith('!')) {
+    const messageArgs = msg.messageText.substring(1).split(' ');
 
-	if (msg.messageText.startsWith("!")) {
-		let messageArgs = msg.messageText.substring(1).split(" ")
+    if (messageArgs[0] === 'pleep') {
+      client.privmsg(CHANNEL_NAME, 'pleep');
+    }
 
-		if (messageArgs[0] === "pleep") {
-			client.privmsg(CHANNEL_NAME, "pleep")
-		}
+    if (messageArgs[0] === 'register') {
+      const createUserFromTemplate = db.query(
+        'INSERT INTO users (uid, username, points) VALUES ($uid, $username, $points);',
+      );
+      if (isRegistered(msg.senderUserID) === true) {
+        client.privmsg(
+          CHANNEL_NAME,
+          'Hmm It looks like you have already registered. Carry on!',
+        );
+      }
+      createUserFromTemplate.run({
+        $uid: msg.senderUserID,
+        $username: msg.senderUsername,
+        $points: 150,
+      });
+      client.privmsg(
+        CHANNEL_NAME,
+        'You registered and got 150 free 🪙 pleeps! Nice!',
+      );
+    }
 
-		if (messageArgs[0] === "register") {
-			const createUserFromTemplate = db.query(
-				"INSERT INTO users (uid, username, points) VALUES ($uid, $username, $points);"
-			)
-			if (isRegistered(msg.senderUserID) === true) {
-				client.privmsg(
-					CHANNEL_NAME,
-					"Hmm It looks like you have already registered. Carry on!"
-				)
-			}
-			createUserFromTemplate.run({
-				$uid: msg.senderUserID,
-				$username: msg.senderUsername,
-				$points: 150,
-			})
-			client.privmsg(
-				CHANNEL_NAME,
-				"You registered and got 150 free GAMBA points! Nice!"
-			)
-		}
+    if (messageArgs[0] === 'pleeps') {
+      if (messageArgs.length > 1 && messageArgs[1].startsWith('@')) {
+        const strippedUser = messageArgs[1].trim().toLowerCase().substring(1);
+        if (userIsInDatabase(strippedUser) === false) {
+          client.privmsg(
+            CHANNEL_NAME,
+            "pleep I don't recognize that user. Are they registered?",
+          );
+          return;
+        }
+        const uid = getUidFromUsername.get({
+          $username: strippedUser,
+        }) as Uid;
+        const points = getUserPointsFromId.get({
+          $uid: uid.uid,
+        }) as Points;
+        client.privmsg(
+          CHANNEL_NAME,
+          `${messageArgs[1]} has ${points.points} pleeps.`,
+        );
+        return;
+      }
+      if (isRegistered(msg.senderUserID) === false) {
+        client.privmsg(
+          CHANNEL_NAME,
+          'pleep You are not registered! Type !register in chat to register!',
+        );
+        return;
+      }
+      const points = getUserPointsFromId.get({
+        $uid: msg.senderUserID,
+      }) as Points;
 
-		if (messageArgs[0] === "points") {
-			if (messageArgs.length > 1 && messageArgs[1].startsWith("@")) {
-				let strippedUser = messageArgs[1].trim().toLowerCase().substring(1)
-				if (userIsInDatabase(strippedUser) === false) {
-					client.privmsg(
-						CHANNEL_NAME,
-						"pleep I don't recognize that user. Are they registered?"
-					)
-					return
-				} else {
-					let uid = getUidFromUsername.get({
-						$username: strippedUser,
-					}) as Uid
-					let points = getUserPointsFromId.get({
-						$uid: uid.uid,
-					}) as Points
-					client.privmsg(
-						CHANNEL_NAME,
-						`${messageArgs[1]} has ${points.points} points.`
-					)
-					return
-				}
-			} else {
-				if (isRegistered(msg.senderUserID) === false) {
-					client.privmsg(
-						CHANNEL_NAME,
-						"pleep You are not registered! Type !register in chat to register!"
-					)
-					return
-				}
-				let points = getUserPointsFromId.get({
-					$uid: msg.senderUserID,
-				}) as Points
-	
-				client.reply(
-					CHANNEL_NAME,
-					msg.messageID,
-					`You have ${points.points} GAMBA points!`
-				)
-			}
+      client.reply(
+        CHANNEL_NAME,
+        msg.messageID,
+        `You have ${points.points} pleeps!`,
+      );
+    }
 
-		}
+    if (messageArgs[0] === 'gamba') {
+      if (isRegistered(msg.senderUserID) === false) {
+        client.privmsg(
+          CHANNEL_NAME,
+          'pleep You are not registered! Type !register in chat to register!',
+        );
+        return;
+      }
+      const points = getUserPointsFromId.get({
+        $uid: msg.senderUserID,
+      }) as Points;
 
-		if (messageArgs[0] === "gamba") {
-			if (isRegistered(msg.senderUserID) === false) {
-				client.privmsg(
-					CHANNEL_NAME,
-					"pleep You are not registered! Type !register in chat to register!"
-				)
-				return
-			}
-			let points = getUserPointsFromId.get({
-				$uid: msg.senderUserID,
-			}) as Points
+      if (points.points <= 0) {
+        client.reply(
+          CHANNEL_NAME,
+          msg.messageID,
+          'pleep You are out of pleeps!',
+        );
+        return;
+      }
 
-			if (points.points <= 0) {
-				client.reply(
-					CHANNEL_NAME,
-					msg.messageID,
-					`pleep You are out of points!`
-				)
-				return
-			}
+      if (messageArgs[1] === 'all') {
+        gamba(points.points, points.points, msg.senderUserID, msg.messageID);
+        return;
+      }
 
-			if (messageArgs[1] === "all") {
-				gamba(points.points, points.points, msg.senderUserID, msg.messageID)
-				return
-			}
+      if (Number.isNaN(Number(messageArgs[1]))) {
+        client.reply(
+          CHANNEL_NAME,
+          msg.messageID,
+          "pleep I don't think that's a number",
+        );
+        return;
+      }
 
-			if (isNaN(Number(messageArgs[1]))) {
-				client.reply(
-					CHANNEL_NAME,
-					msg.messageID,
-					`pleep I don't think that's a number`
-				)
-				return
-			}
+      if (Number(messageArgs[1]) < 0) {
+        client.reply(CHANNEL_NAME, msg.messageID, 'forsenCD Nice try buddy');
+        return;
+      }
+      if (Number(messageArgs[1]) === 0) {
+        client.reply(CHANNEL_NAME, msg.messageID, 'Erm ...');
+        return;
+      }
 
-			if (Number(messageArgs[1]) < 0) {
-				client.reply(
-					CHANNEL_NAME,
-					msg.messageID,
-					`forsenCD Nice try buddy`
-				)
-				return
-			}
-			if (Number(messageArgs[1]) === 0) {
-				client.reply(CHANNEL_NAME, msg.messageID, `Erm ...`)
-				return
-			}
+      if (points.points < Number(messageArgs[1])) {
+        client.reply(
+          CHANNEL_NAME,
+          msg.messageID,
+          `pleep Sorry, you only have ${points.points} 🪙 pleeps!`,
+        );
+        return;
+      }
 
-			if (points.points < Number(messageArgs[1])) {
-				client.reply(
-					CHANNEL_NAME,
-					msg.messageID,
-					`pleep Sorry, you only have ${points.points} points!`
-				)
-				return
-			}
+      gamba(
+        points.points,
+        Number(messageArgs[1]),
+        msg.senderUserID,
+        msg.messageID,
+      );
+    }
+  }
+});
 
-			gamba(
-				points.points,
-				Number(messageArgs[1]),
-				msg.senderUserID,
-				msg.messageID
-			)
-			return
-		}
-	}
-})
-
-client.connect()
-client.join(CHANNEL_NAME)
+client.connect();
+client.join(CHANNEL_NAME);
